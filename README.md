@@ -11,3 +11,6 @@ This is a demo script, no tested thoroughly. Do not use in prodiction and withou
 - Tests if LocalProfileLoadTime and LocalProfileUnLoadTime are older than $MaxAgeInDays days.
 - Removes newer user profiles from the list
 - Deletes all user profiles which are still remaining and not filtered
+
+
+How to get LoadTime and UnLoadTime from registry: https://woshub.com/delete-old-user-profiles-gpo-powershell/
