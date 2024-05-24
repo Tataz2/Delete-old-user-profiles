@@ -1,6 +1,8 @@
 # Delete-old-user-profiles
 PowerShell script which deletes user profiles older than X days based on LocalProfileLoadTime and LocalProfileUnLoadTime IN WINDOWS REGISTRY
 
+This is a demo script, no tested thoroughly. Do not use in prodiction and without backuping all important files!
+
 - Gets a list of user profiles
 - Gets LocalProfileLoadTime and LocalProfileUnLoadTime for every profile
 - Tests if user is a domain user
