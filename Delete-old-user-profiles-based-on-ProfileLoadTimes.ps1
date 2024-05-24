@@ -188,10 +188,3 @@ write-host "All done! Exiting..."
 Start-Sleep 2
 EXIT
 
-
-# Filetime is ticks since midnight January 1st 1601 (UTC).
-
-#  A single tick represents one hundred nanoseconds or one ten-millionth of a second. There are 10,000 ticks in a millisecond (see TicksPerMillisecond) and 10 million ticks in a second.
-# https://learn.microsoft.com/en-us/dotnet/api/system.datetime.ticks?view=net-8.0
-
-# [datetime]::FromFileTime("0x0") is maanantai 1. tammikuuta 1601 2.00.00
