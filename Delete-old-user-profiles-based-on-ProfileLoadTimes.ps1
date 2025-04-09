@@ -14,7 +14,7 @@
 $ExcludeUsersList = @("asennus", "*ire", "mike", "*admin*")
 
 # Delete profiles not used in $MaxAgeInDays
-$MaxAgeInDays = 365
+$MaxAgeInDays = 365*2
 
 # Domain name. Checked against DOMAIN\username
 $DomainName= "domain"
@@ -30,7 +30,7 @@ $ExcludeUsersList = $ExcludeUsersList + $CurrentUserName
 
 write-host "TEST 1 AND 2. Check if username is domain user and is not in exclude list." -ForegroundColor Green
 write-host ""
-write-host "Excluede usernames:"
+write-host "Excluded usernames:"
 $ExcludeUsersList
 write-host ""
 
@@ -70,6 +70,9 @@ foreach ($p in $profilelist) {
     $UserName =  ($objUser -split "\\")[-1]
     $AccountPrefix = ($objUser -split "\\")[0]
 
+    # Profile path. 
+    $ProfileImagePath = (Get-ItemProperty -Path $p.PSPath -Name ProfileImagePath -ErrorAction SilentlyContinue).ProfileImagePath
+
     # TEST 1. Test if username is in exclude list.
     $Exclude = $false # Default
     ForEach ($AA in $ExcludeUsersList) {
@@ -88,7 +91,7 @@ foreach ($p in $profilelist) {
         $Exclude = $true
     }
 
-
+    # Add each profile with info to $profileInfos.
     $profileInfos += [pscustomobject][ordered]@{
         User = $objUser
         UserName = $UserName
@@ -99,14 +102,13 @@ foreach ($p in $profilelist) {
         UnloadTimeHex = $UnloadTimeHex
         AgeInDays = $null
         Exclude = $Exclude
-        Delete = $nulln
+        Delete = $null
+        ProfileImagePath = $ProfileImagePath
     }
 } 
 
 write-host ""
-# $profileInfos
 write-host Profile count before exclusion is @($profileInfos).count
-
 
 # Remove excluded user profiles and if file converterd to date time is $null.
 $profileInfos = $profileInfos | Where-Object {$_.Exclude -ne $true} |  Where-Object {$_.LoadTime -ne $null} |  Where-Object {$_.UnLoadTime -ne $null}
@@ -119,6 +121,13 @@ write-host ""
 # TEST 3. Test if user has not logged in or out in $MaxAgeInDays days.
 write-host "TEST 3. Check if user has loggeg in or out in $($MaxAgeInDays) days" -ForegroundColor Green
 write-host ""
+
+# List profile if LoadTime or UnLoadTime unavailable.
+if ( ($profileInfos | Where-Object {$_.LoadTime -eq $null -or $_.UnLoadTime -eq $null}).count -gt 0) {
+    Write-Host LoadTime or UnLoadTime could not be found for the following profiles
+    $profileInfos | Where-Object {$_.LoadTime -eq $null -or $_.UnLoadTime -eq $null}
+}
+
 
 $TimeNow = [datetime]::UtcNow # UTC
 $TimeNowHex = ("{0:x}" -f $TimeNow.ToFileTime()).ToUpper()
@@ -155,12 +164,20 @@ write-host "DELETION of profiles older than  $($MaxAgeInDays) days" -ForegroundC
 write-host "Following profiles will be deleted!"
 
 if ( @($profileInfos).count -le 0 ) { write-host ""; write-host "No profiles to delete!" -BackgroundColor DarkGreen }
+else {
 
+    $profileSizeGBAll = 0
 
-foreach ($profile in $profileInfos) {
-    write-host "$($profile.username) "  -NoNewLine -ForegroundColor Red
-    write-host "(age $([math]::round($profile.AgeInDays, 3)) days)"
+    foreach ($profile in $profileInfos) {
+        write-host "$($profile.username) "  -NoNewLine -ForegroundColor Red
+        write-host "(age $([math]::round($profile.AgeInDays, 3)) days) "  -NoNewLine
+        $profileSizeGB= (Get-ChildItem $profile.ProfileImagePath -Recurse -Force -ErrorAction SilentlyContinue |  Measure-Object -Property Length -Sum).sum/1GB
+        $profileSizeGBAll += $profileSizeGB
+        write-host "(size $([math]::round($profileSizeGB, 3)) GB) "
+    }
+    Write-Host "TOTAL SIZE: $([math]::round($profileSizeGBAll, 3)) GB"
 }
+
 write-host ""
 
 # https://stackoverflow.com/questions/24649019/how-to-use-confirm-in-powershell
@@ -169,7 +186,6 @@ if ($choice -eq "n" ) {
     write-host "Exiting..."
     Start-Sleep 2
     EXIT
-
 }
 
 write-host ""
