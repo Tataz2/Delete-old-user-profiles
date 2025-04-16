@@ -19,6 +19,9 @@ $MaxAgeInDays = 365*2
 # Domain name. Checked against DOMAIN\username
 $DomainName= "domain"
 
+# 0 = ask user to confirm user file deletion.
+$NoConfirm = 0
+
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
 # Get domain name, command Get-ADDomain not available by default
@@ -180,15 +183,17 @@ else {
 
 write-host ""
 
-# https://stackoverflow.com/questions/24649019/how-to-use-confirm-in-powershell
-while( -not ( ($choice = (Read-Host "Do you want to continue?")) -match "^(y|n)$")){ "Y or N ?"}
-if ($choice -eq "n" ) {
-    write-host "Exiting..."
-    Start-Sleep 2
-    EXIT
+# Confirm or not
+if ($NoConfirm -eq 0) {
+    # https://stackoverflow.com/questions/24649019/how-to-use-confirm-in-powershell
+    while( -not ( ($choice = (Read-Host "Do you want to continue?")) -match "^(y|n)$")){ "Y or N ?"}
+    if ($choice -eq "n" ) {
+        write-host "Exiting..."
+        Start-Sleep 2
+        EXIT
+    }
+    write-host ""
 }
-
-write-host ""
 
 foreach ($profile in $profileInfos) {
     if ($profile.Delete -eq $true) {
